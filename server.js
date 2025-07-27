@@ -23,15 +23,15 @@ if (!fs.existsSync(dataDir)) {
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-  user: 'taarisingh2005@gmail.com',
-  pass: 'Makdi12345!' // Note: If using 2FA, this should be an app password instead of your regular password
+  user: 'arjun.divecha@gmail.com',
+  pass: 'afwezbifgipbimyu' // Note: If using 2FA, this should be an app password instead of your regular password
   }
 });
 
 // Helper function to send emails
 const sendInvitationEmail = (participant, eventId) => {
   const mailOptions = {
-    from: 'taarisingh2005@gmail.com',
+    from: 'arjun.divecha@gmail.com',
     to: participant.email,
     subject: 'Event Invitation - Please Submit Your Availability',
     html: `
@@ -44,13 +44,14 @@ const sendInvitationEmail = (participant, eventId) => {
     `
   };
 
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.error('Error sending email:', error);
-    } else {
-      console.log('Email sent:', info.response);
-    }
-  });
+transporter.sendMail(mailOptions, (error, info) => {
+  if (error) {
+    console.error('Error sending email:', error);
+    console.log('Error details:', error.response);
+  } else {
+    console.log('Email sent:', info.response);
+  }
+});
 };
 
 // API endpoint to create event
