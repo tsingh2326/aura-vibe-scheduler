@@ -1,0 +1,23 @@
+{
+  "title": "bday",
+  "description": "party",
+  "location": "in person",
+  "duration": 60,
+  "participants": [
+    {
+      "id": "1753595497663",
+      "name": "a",
+      "email": "arjun.divecha@gmail.com"
+    }
+  ],
+  "timeSlots": [
+    {
+      "id": "1753595509449",
+      "date": "2025-07-28",
+      "startTime": "12:30",
+      "endTime": "13:05"
+    }
+  ],
+  "headCount": 1,
+  "backdrop": "/src/assets/backdrop-celebration.jpg"
+}

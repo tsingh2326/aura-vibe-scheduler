@@ -31,6 +31,7 @@ interface EventData {
   participants: Participant[];
   timeSlots: TimeSlot[];
   backdrop?: string;
+  headCount: number; // Add headCount field
 }
 
 interface EventCreationWizardProps {
@@ -40,14 +41,15 @@ interface EventCreationWizardProps {
 export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps) {
   const [step, setStep] = useState(1);
   const [isGeneratingBackdrop, setIsGeneratingBackdrop] = useState(false);
-  const [eventData, setEventData] = useState<EventData>({
-    title: "",
-    description: "",
-    location: "",
-    duration: 60,
-    participants: [],
-    timeSlots: [],
-  });
+const [eventData, setEventData] = useState<EventData>({
+  title: "",
+  description: "",
+  location: "",
+  duration: 60,
+  participants: [],
+  timeSlots: [],
+  headCount: 0, // Initialize headCount
+})
 
   const generateAIBackdrop = async () => {
     if (!eventData.title) {
@@ -89,17 +91,18 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
     }
   };
 
-  const addParticipant = () => {
-    const newParticipant: Participant = {
-      id: Date.now().toString(),
-      name: "",
-      email: "",
-    };
-    setEventData(prev => ({
-      ...prev,
-      participants: [...prev.participants, newParticipant]
-    }));
+const addParticipant = () => {
+  const newParticipant: Participant = {
+    id: Date.now().toString(),
+    name: "",
+    email: "",
   };
+  setEventData(prev => ({
+    ...prev,
+    participants: [...prev.participants, newParticipant],
+    headCount: prev.participants.length + 1 // Update headCount
+  }));
+};
 
   const updateParticipant = (id: string, field: keyof Participant, value: string) => {
     setEventData(prev => ({
@@ -110,12 +113,13 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
     }));
   };
 
-  const removeParticipant = (id: string) => {
-    setEventData(prev => ({
-      ...prev,
-      participants: prev.participants.filter(participant => participant.id !== id)
-    }));
-  };
+const removeParticipant = (id: string) => {
+  setEventData(prev => ({
+    ...prev,
+    participants: prev.participants.filter(participant => participant.id !== id),
+    headCount: prev.participants.length - 1 // Update headCount
+  }));
+};
 
   const addTimeSlot = () => {
     const newSlot: TimeSlot = {
@@ -171,8 +175,27 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
       toast.error("Please enter names for all participants");
       return;
     }
-    onEventCreated(eventData);
-    toast.success("Event created successfully! 🎉");
+    
+    // Send event data to backend API
+    fetch('http://localhost:3000/api/events', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...eventData,
+        headCount: eventData.participants.length
+      }),
+    })
+    .then(response => response.json())
+    .then(data => {
+      toast.success("Event created successfully! 🎉");
+      console.log('Event created:', data);
+    })
+    .catch(error => {
+      toast.error("Failed to create event");
+      console.error('Error:', error);
+    });
   };
 
   return (
