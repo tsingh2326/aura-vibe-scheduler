@@ -15,11 +15,18 @@ interface TimeSlot {
   endTime: string;
 }
 
+interface Participant {
+  id: string;
+  name: string;
+  email: string;
+}
+
 interface EventData {
   title: string;
   description: string;
   location: string;
   duration: number;
+  participants: Participant[];
   timeSlots: TimeSlot[];
   backdrop?: string;
 }

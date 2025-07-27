@@ -17,11 +17,18 @@ interface TimeSlot {
   endTime: string;
 }
 
+interface Participant {
+  id: string;
+  name: string;
+  email: string;
+}
+
 interface EventData {
   title: string;
   description: string;
   location: string;
   duration: number;
+  participants: Participant[];
   timeSlots: TimeSlot[];
   backdrop?: string;
 }
@@ -38,6 +45,7 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
     description: "",
     location: "",
     duration: 60,
+    participants: [],
     timeSlots: [],
   });
 
@@ -81,6 +89,34 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
     }
   };
 
+  const addParticipant = () => {
+    const newParticipant: Participant = {
+      id: Date.now().toString(),
+      name: "",
+      email: "",
+    };
+    setEventData(prev => ({
+      ...prev,
+      participants: [...prev.participants, newParticipant]
+    }));
+  };
+
+  const updateParticipant = (id: string, field: keyof Participant, value: string) => {
+    setEventData(prev => ({
+      ...prev,
+      participants: prev.participants.map(participant =>
+        participant.id === id ? { ...participant, [field]: value } : participant
+      )
+    }));
+  };
+
+  const removeParticipant = (id: string) => {
+    setEventData(prev => ({
+      ...prev,
+      participants: prev.participants.filter(participant => participant.id !== id)
+    }));
+  };
+
   const addTimeSlot = () => {
     const newSlot: TimeSlot = {
       id: Date.now().toString(),
@@ -115,7 +151,11 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
       toast.error("Please enter an event title");
       return;
     }
-    if (step === 2 && eventData.timeSlots.length === 0) {
+    if (step === 2 && eventData.participants.length === 0) {
+      toast.error("Please add at least one participant");
+      return;
+    }
+    if (step === 3 && eventData.timeSlots.length === 0) {
       toast.error("Please add at least one time slot");
       return;
     }
@@ -125,6 +165,10 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
   const handleCreate = () => {
     if (eventData.timeSlots.some(slot => !slot.date || !slot.startTime || !slot.endTime)) {
       toast.error("Please complete all time slots");
+      return;
+    }
+    if (eventData.participants.some(p => !p.name)) {
+      toast.error("Please enter names for all participants");
       return;
     }
     onEventCreated(eventData);
@@ -144,7 +188,7 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
 
       {/* Progress Indicator */}
       <div className="flex items-center justify-center space-x-2 mb-8">
-        {[1, 2, 3].map((number) => (
+        {[1, 2, 3, 4].map((number) => (
           <div
             key={number}
             className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
@@ -245,6 +289,72 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
         <Card className="shadow-medium">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Invite Participants
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-muted-foreground">
+              Add the people you want to invite to this event. They'll receive a link to vote on their availability.
+            </p>
+            
+            {eventData.participants.map((participant) => (
+              <div key={participant.id} className="p-4 bg-surface rounded-lg shadow-soft space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label>Name *</Label>
+                    <Input
+                      placeholder="Enter participant name"
+                      value={participant.name}
+                      onChange={(e) => updateParticipant(participant.id, "name", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Email (optional)</Label>
+                    <Input
+                      type="email"
+                      placeholder="participant@email.com"
+                      value={participant.email}
+                      onChange={(e) => updateParticipant(participant.id, "email", e.target.value)}
+                    />
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeParticipant(participant.id)}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  Remove
+                </Button>
+              </div>
+            ))}
+            
+            <Button
+              onClick={addParticipant}
+              variant="outline"
+              className="w-full"
+            >
+              <Users className="w-4 h-4" />
+              Add Participant
+            </Button>
+            
+            <div className="p-4 bg-primary-soft rounded-lg">
+              <div className="flex items-center gap-2 text-sm text-primary">
+                <Users className="w-4 h-4" />
+                <span className="font-medium">
+                  {eventData.participants.length} participant{eventData.participants.length !== 1 ? 's' : ''} added
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {step === 3 && (
+        <Card className="shadow-medium">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <Calendar className="w-5 h-5 text-primary" />
               Time Slots
             </CardTitle>
@@ -300,7 +410,7 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
         </Card>
       )}
 
-      {step === 3 && (
+      {step === 4 && (
         <Card className="shadow-medium">
           <CardHeader>
             <CardTitle>Review & Create</CardTitle>
@@ -326,6 +436,17 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
                 />
               </div>
             )}
+            
+            <div className="space-y-2">
+              <h4 className="font-semibold">Participants ({eventData.participants.length}):</h4>
+              <div className="flex flex-wrap gap-2">
+                {eventData.participants.map((participant) => (
+                  <div key={participant.id} className="px-3 py-1 bg-primary-soft rounded-full text-sm">
+                    {participant.name}
+                  </div>
+                ))}
+              </div>
+            </div>
 
             <div className="space-y-2">
               <h4 className="font-semibold">Time Options:</h4>
@@ -346,7 +467,7 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
           </Button>
         )}
         <div className="ml-auto">
-          {step < 3 ? (
+          {step < 4 ? (
             <Button onClick={handleNext}>
               Next
               <ArrowRight className="w-4 h-4" />
