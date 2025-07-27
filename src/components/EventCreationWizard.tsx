@@ -339,7 +339,7 @@ export function EventCreationWizard({ onEventCreated }: EventCreationWizardProps
               Add Participant
             </Button>
             
-            <div className="p-4 bg-primary-soft rounded-lg">
+            <div className="p-4 bg-primary-soft rounded-lg" key={`counter-${eventData.participants.length}`}>
               <div className="flex items-center gap-2 text-sm text-primary">
                 <Users className="w-4 h-4" />
                 <span className="font-medium">
